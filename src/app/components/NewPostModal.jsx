@@ -194,9 +194,7 @@ export default function NewPostModal({ onClose, onSubmit }) {
                     {remaining}
                   </span>
                 )}
-                <span className="hidden text-[11px] uppercase tracking-wide text-zinc-600 sm:inline">
-                  Anyone can reply
-                </span>
+
                 <button
                   type="button"
                   onClick={handleSubmit}

@@ -4,31 +4,37 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
 export default function Globe() {
-  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
   const isDraggingRef = useRef(false);
   const previousMouseRef = useRef({ x: 0, y: 0 });
   const rotationVelocityRef = useRef({ x: 0, y: 0.002 });
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.style.display = "block";
+    canvas.style.cursor = "grab";
+    container.appendChild(canvas);
+
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true,
+      });
+    } catch {
+      console.error("WebGL not supported");
+      return;
+    }
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(
-      45,
-      canvas.clientWidth / canvas.clientHeight,
-      0.1,
-      1000
-    );
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
     camera.position.z = 3.5;
-
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: true,
-      alpha: true,
-    });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     const globeGroup = new THREE.Group();
     scene.add(globeGroup);
@@ -116,9 +122,27 @@ export default function Globe() {
       }
     }
 
+    const updateSize = () => {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (width === 0 || height === 0) return;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    };
+
+    updateSize();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateSize();
+    });
+    resizeObserver.observe(container);
+
     const handleMouseDown = (e) => {
       isDraggingRef.current = true;
       previousMouseRef.current = { x: e.clientX, y: e.clientY };
+      canvas.style.cursor = "grabbing";
     };
 
     const handleMouseMove = (e) => {
@@ -132,6 +156,7 @@ export default function Globe() {
 
     const handleMouseUp = () => {
       isDraggingRef.current = false;
+      canvas.style.cursor = "grab";
     };
 
     canvas.addEventListener("mousedown", handleMouseDown);
@@ -158,8 +183,8 @@ export default function Globe() {
       };
     };
 
-    canvas.addEventListener("touchstart", handleTouchStart);
-    window.addEventListener("touchmove", handleTouchMove);
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
     window.addEventListener("touchend", handleMouseUp);
 
     let animationId;
@@ -193,41 +218,35 @@ export default function Globe() {
     };
     animate();
 
-    const handleResize = () => {
-      if (!canvas) return;
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
-    };
-    window.addEventListener("resize", handleResize);
-
     return () => {
       cancelAnimationFrame(animationId);
+      resizeObserver.disconnect();
       canvas.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
       canvas.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleMouseUp);
-      window.removeEventListener("resize", handleResize);
       renderer.dispose();
       sphereGeometry.dispose();
       sphereMaterial.dispose();
       innerGeometry.dispose();
       innerMaterial.dispose();
+      if (container.contains(canvas)) {
+        container.removeChild(canvas);
+      }
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
+    <div
+      ref={containerRef}
       style={{
         width: "100%",
         height: "100%",
-        display: "block",
-        cursor: "grab",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     />
   );

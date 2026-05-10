@@ -1,8 +1,7 @@
-﻿"use client";
-
+﻿import React from "react";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { ReactNode } from "react";
+import Providers from "./providers";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -14,18 +13,19 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export const metadata = {
+  title: "DevHub - Where devs ship and connect",
+  description: "A mini social platform for developers",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <head>
-        <title>DevHub - Where devs ship and connect</title>
-        <meta name="description" content="A mini social platform for developers" />
-      </head>
       <body className="min-h-full flex flex-col bg-[#0a0a0f] text-white">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

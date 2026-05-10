@@ -2,14 +2,14 @@
 
 import { motion } from "framer-motion";
 import { Github } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useAuth } from "./context/AuthContext";
 import Globe from "./components/Globe";
 
 export default function LandingPage() {
-  const router = useRouter();
+  const { login, isLoading } = useAuth();
 
   const handleLogin = () => {
-    router.push("/home");
+    login();
   };
 
   return (
@@ -54,10 +54,11 @@ export default function LandingPage() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleLogin}
-          className="inline-flex items-center gap-3 px-8 py-4 bg-[#111118] border border-gray-800 rounded-xl text-white font-medium hover:border-[#3b82f6] hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all duration-300"
+          disabled={isLoading}
+          className="inline-flex items-center gap-3 px-8 py-4 bg-[#111118] border border-gray-800 rounded-xl text-white font-medium hover:border-[#3b82f6] hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Github className="w-5 h-5" />
-          Login with GitHub
+          {isLoading ? "Loading..." : "Login with GitHub"}
         </motion.button>
       </div>
 
